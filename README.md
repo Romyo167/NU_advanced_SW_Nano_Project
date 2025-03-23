@@ -53,11 +53,6 @@ This project is a real-time chat application built using Django, Django Channels
     daphne chatApp.asgi:application -p 8000 -b 0.0.0.0
     ```
 
-6. **Run the django server**:
-    ```bash
-    python manage.py runserver
-    ```
-
 7.  **Open Your Browser:**
     *   Go to `http://127.0.0.1:8000/` in your web browser.
 
@@ -70,3 +65,4 @@ This project is a real-time chat application built using Django, Django Channels
 
 ## Project Structure
 
+NU_advanced_SW_Nano_Project/ ├── chatApp/ │ ├── init.py │ ├── asgi.py # ASGI application configuration │ ├── settings.py # Django project settings │ ├── urls.py # Project-level URL configuration │ └── wsgi.py # WSGI application configuration ├── myapp/ │ ├── init.py │ ├── consumers.py # WebSocket consumers │ ├── migrations/ # Database migrations │ ├── routing.py # WebSocket URL routing │ ├── templates/ │ │ └── home.html # Chat room template │ ├── urls.py # App-level URL configuration │ ├── views.py # Django views │ └── tests.py # Tests ├── manage.py # Django management script ├── requirements.txt # Project dependencies ├── venv/ # Virtual environment └── db.sqlite3 # Database file
