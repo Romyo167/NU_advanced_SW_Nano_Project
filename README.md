@@ -65,6 +65,7 @@ This project is a real-time chat application built using Django, Django Channels
 
 ## Project Structure
 
+```
 NU_advanced_SW_Nano_Project/
 ├── chatApp/
 │   ├── __init__.py
@@ -86,4 +87,4 @@ NU_advanced_SW_Nano_Project/
 ├── requirements.txt  # Project dependencies
 ├── venv/  # Virtual environment
 └── db.sqlite3  # Database file
-
+```
