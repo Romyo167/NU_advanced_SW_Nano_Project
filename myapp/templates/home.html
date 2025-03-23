@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Room</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+        #room-selection, #chat-container {
+            width: 50%;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        #chat-container {
+            display: none; /* Hide chat initially */
+        }
+        #chat-box {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #fff;
+            margin-bottom: 10px;
+        }
+        .message {
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            max-width: 80%;
+            display: inline-block;
+        }
+        .own-message {
+            background: #d1e7ff;
+            text-align: right;
+            float: right;
+            clear: both;
+        }
+        .other-message {
+            background: #e1ffe1;
+            text-align: left;
+            float: left;
+            clear: both;
+        }
+        .timestamp {
+            font-size: 12px;
+            color: gray;
+            display: block;
+            text-align: right;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Room Selection -->
+    <div id="room-selection">
+        <h2>Enter a Chat Room</h2>
+        <input id="room-name-input" type="text" placeholder="Room name" />
+        <button onclick="enterRoom()">Join</button>
+    </div>
+
+    <!-- Chat Container (Hidden Initially) -->
+    <div id="chat-container">
+        <h2>Chat Room: <span id="room-name"></span></h2>
+        <div id="chat-box"></div>
+        <input id="message-input" type="text" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        let roomName, username, socket;
+
+        function enterRoom() {
+            roomName = document.getElementById("room-name-input").value.trim();
+            if (!roomName) {
+                alert("Please enter a room name!");
+                return;
+            }
+
+            username = prompt("Enter your name:");
+            if (!username) {
+                alert("Please enter a username!");
+                return;
+            }
+
+            document.getElementById("room-selection").style.display = "none";
+            document.getElementById("chat-container").style.display = "block";
+            document.getElementById("room-name").textContent = roomName;
+
+            // Connect WebSocket
+            socket = new WebSocket(`ws://${window.location.host}/ws/chat/${roomName}/`);
+
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const chatBox = document.getElementById("chat-box");
+
+                const messageDiv = document.createElement("div");
+                messageDiv.classList.add("message");
+
+                if (data.username === username) {
+                    messageDiv.classList.add("own-message");
+                } else {
+                    messageDiv.classList.add("other-message");
+                }
+
+                const timestamp = new Date().toLocaleTimeString();
+
+                messageDiv.innerHTML = `<b>${roomName} | ${data.username}:</b> ${data.message} 
+                                        <span class="timestamp">${timestamp}</span>`;
+
+                chatBox.appendChild(messageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            };
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById("message-input");
+            if (messageInput.value.trim() !== "") {
+                socket.send(JSON.stringify({ room_name: roomName, username, message: messageInput.value }));
+                messageInput.value = "";
+            }
+        }
+    </script>
+
+</body>
+</html>
