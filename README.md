@@ -65,4 +65,25 @@ This project is a real-time chat application built using Django, Django Channels
 
 ## Project Structure
 
-```` NU_advanced_SW_Nano_Project/ ├── chatApp/ │ ├── init.py │ ├── asgi.py # ASGI application configuration │ ├── settings.py # Django project settings │ ├── urls.py # Project-level URL configuration │ └── wsgi.py # WSGI application configuration ├── myapp/ │ ├── init.py │ ├── consumers.py # WebSocket consumers │ ├── migrations/ # Database migrations │ ├── routing.py # WebSocket URL routing │ ├── templates/ │ │ └── home.html # Chat room template │ ├── urls.py # App-level URL configuration │ ├── views.py # Django views │ └── tests.py # Tests ├── manage.py # Django management script ├── requirements.txt # Project dependencies ├── venv/ # Virtual environment └── db.sqlite3 # Database file ```
+NU_advanced_SW_Nano_Project/
+├── chatApp/
+│   ├── __init__.py
+│   ├── asgi.py  # ASGI application configuration
+│   ├── settings.py  # Django project settings
+│   ├── urls.py  # Project-level URL configuration
+│   └── wsgi.py  # WSGI application configuration
+├── myapp/
+│   ├── __init__.py
+│   ├── consumers.py  # WebSocket consumers
+│   ├── migrations/  # Database migrations
+│   ├── routing.py  # WebSocket URL routing
+│   ├── templates/
+│   │   └── home.html  # Chat room template
+│   ├── urls.py  # App-level URL configuration
+│   ├── views.py  # Django views
+│   └── tests.py  # Tests
+├── manage.py  # Django management script
+├── requirements.txt  # Project dependencies
+├── venv/  # Virtual environment
+└── db.sqlite3  # Database file
+
