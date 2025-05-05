@@ -3,141 +3,701 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Room</title>
+    <meta name="csrf-token" content="{{ csrf_token }}"> <!-- Keep only one CSRF meta tag -->
+    <title>NanoChat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"> <!-- Example Font -->
     <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-hover: #0056b3;
+            --secondary-color: #6c757d;
+            --secondary-hover: #5a6268;
+            --danger-color: #dc3545;
+            --danger-hover: #c82333;
+            --success-color: #28a745;
+            --light-bg: #f8f9fa;
+            --medium-bg: #e9ecef;
+            --dark-text: #343a40;
+            --light-text: #f8f9fa;
+            --medium-text: #6c757d;
+            --border-color: #dee2e6;
+            --container-bg: #ffffff;
+            --message-own-bg: #d1e7ff;
+            --message-other-bg: #e9ecef;
+            --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            --border-radius: 8px;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: var(--light-bg);
+            margin: 0;
+            padding: 20px;
+            color: var(--dark-text);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align items to the top */
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 700px;
+            background: var(--container-bg);
+            padding: 25px 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-top: 20px;
             text-align: center;
-            padding: 20px;
+            border: 1px solid var(--border-color);
         }
-        #room-selection, #chat-container {
-            width: 50%;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-        }
+
+        /* Hide sections initially */
+        #signup-section,
+        #main-content,
         #chat-container {
-            display: none; /* Hide chat initially */
+            display: none;
         }
-        #chat-box {
-            height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+        h3 {
+            color: var(--dark-text);
+            margin-top: 20px;
+            margin-bottom: 15px;
+            font-weight: 500;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 25px 0;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left; /* Align labels left if added */
+        }
+        .form-group label { /* Style if you add labels */
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: calc(100% - 24px); /* Account for padding */
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            margin-bottom: 10px; /* Space between inputs */
+            box-sizing: border-box; /* Include padding in width */
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-top: 10px; /* Space above buttons */
+        }
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+        button.secondary {
+             background-color: var(--secondary-color);
+        }
+         button.secondary:hover {
+             background-color: var(--secondary-hover);
+        }
+
+        .link-button {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+            font-size: 0.9em;
+            margin-top: 15px;
+        }
+        .link-button:hover {
+            color: var(--primary-hover);
+        }
+
+        .auth-message {
+            margin-top: 15px;
+            font-size: 0.9em;
+            min-height: 1.2em;
+            font-weight: 500;
+        }
+        .auth-message.error {
+            color: var(--danger-color);
+        }
+        .auth-message.success {
+            color: var(--success-color);
+        }
+
+        /* Main Content Styles */
+        #welcome-message {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 10px;
-            background: #fff;
-            margin-bottom: 10px;
+            background-color: var(--medium-bg);
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
-        .message {
+        #welcome-message span {
+            font-weight: 500;
+        }
+        #logout-button {
+             background-color: var(--secondary-color);
+             font-size: 0.9em;
+             padding: 5px 10px;
+             margin: 0; /* Reset margin */
+        }
+        #logout-button:hover {
+             background-color: var(--secondary-hover);
+        }
+
+        /* Room List Styles */
+        #active-rooms-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            text-align: left;
+        }
+        #active-rooms-list li {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+        #active-rooms-list li:last-child {
+            border-bottom: none;
+        }
+        #active-rooms-list li:hover {
+            background-color: var(--medium-bg);
+        }
+        .room-user-count {
+            font-size: 0.85em;
+            color: var(--medium-text);
+            background-color: var(--light-bg);
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        /* Chat Container Styles */
+        #chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+         #chat-header h2 {
+             margin-bottom: 0; /* Override default h2 margin */
+             font-size: 1.4em;
+         }
+        #leave-room-button {
+            background-color: var(--danger-color);
+            font-size: 0.9em;
             padding: 5px 10px;
-            margin: 5px 0;
-            border-radius: 5px;
+            margin: 0; /* Reset margin */
+        }
+         #leave-room-button:hover {
+            background-color: var(--danger-hover);
+        }
+
+        #user-count {
+            margin-bottom: 15px;
+            font-weight: 500;
+            color: var(--medium-text);
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        #chat-box {
+            height: 350px; /* Increased height */
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            background: var(--light-bg);
+            margin-bottom: 15px;
+            text-align: left;
+            border-radius: var(--border-radius);
+            display: flex; /* Enable flexbox for scrolling */
+            flex-direction: column; /* Stack messages vertically */
+        }
+        /* Scrollbar styling (optional, Webkit browsers) */
+        #chat-box::-webkit-scrollbar {
+            width: 8px;
+        }
+        #chat-box::-webkit-scrollbar-track {
+            background: var(--light-bg);
+            border-radius: 4px;
+        }
+        #chat-box::-webkit-scrollbar-thumb {
+            background-color: var(--secondary-color);
+            border-radius: 4px;
+            border: 2px solid var(--light-bg);
+        }
+
+        .message {
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: var(--border-radius);
             max-width: 80%;
-            display: inline-block;
+            word-wrap: break-word;
+            line-height: 1.4;
+            position: relative; /* For timestamp positioning if needed */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         .own-message {
-            background: #d1e7ff;
-            text-align: right;
-            float: right;
-            clear: both;
+            background: var(--message-own-bg);
+            margin-left: auto;
+            align-self: flex-end; /* Align to right */
+            color: var(--dark-text); /* Ensure text is readable */
         }
         .other-message {
-            background: #e1ffe1;
-            text-align: left;
-            float: left;
-            clear: both;
+            background: var(--message-other-bg);
+            margin-right: auto;
+            align-self: flex-start; /* Align to left */
+        }
+        .message-sender {
+            font-weight: 700; /* Bolder sender */
+            font-size: 0.85em;
+            margin-bottom: 4px;
+            color: var(--primary-color); /* Color sender name */
+            display: block; /* Ensure it takes its own line */
         }
         .timestamp {
-            font-size: 12px;
-            color: gray;
+            font-size: 0.75em;
+            color: var(--medium-text);
             display: block;
             text-align: right;
+            margin-top: 5px;
         }
-        input, button {
-            padding: 10px;
-            margin: 5px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
+        .system-message { /* Class for system messages */
+            text-align: center;
+            color: var(--medium-text);
+            font-style: italic;
+            font-size: 0.9em;
+            margin: 10px 0;
+            width: 100%; /* Span full width */
         }
-        button {
-            background: #28a745;
-            color: white;
-            cursor: pointer;
+
+        .chat-input-area { /* Wrapper for input and button */
+            display: flex;
+            gap: 10px; /* Space between input and button */
         }
+        #message-input {
+            flex-grow: 1; /* Input takes available space */
+            margin-bottom: 0; /* Remove default margin */
+        }
+        .chat-input-area button {
+            margin-top: 0; /* Remove default margin */
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+
     </style>
 </head>
 <body>
 
-    <!-- Room Selection -->
-    <div id="room-selection">
-        <h2>Enter a Chat Room</h2>
-        <input id="room-name-input" type="text" placeholder="Room name" />
-        <button onclick="enterRoom()">Join</button>
+    <!-- CSRF Token Input (Hidden) - Keep one -->
+    {% csrf_token %}
+
+    <!-- Login Section -->
+    <div id="login-section" class="container">
+        <h2>Login</h2>
+        <div class="form-group">
+            <input id="login-username-input" type="text" placeholder="Username" required/>
+        </div>
+        <div class="form-group">
+            <input id="login-password-input" type="password" placeholder="Password" required/>
+        </div>
+        <button onclick="loginUser()">Login</button>
+        <div id="login-error" class="auth-message error"></div>
+        <p>Don't have an account? <button class="link-button" onclick="showSignup()">Sign Up</button></p>
     </div>
 
-    <!-- Chat Container (Hidden Initially) -->
-    <div id="chat-container">
-        <h2>Chat Room: <span id="room-name"></span></h2>
-        <div id="chat-box"></div>
-        <input id="message-input" type="text" placeholder="Type a message..." />
-        <button onclick="sendMessage()">Send</button>
+    <!-- Signup Section -->
+    <div id="signup-section" class="container">
+        <h2>Sign Up</h2>
+         <div class="form-group">
+            <input id="signup-username-input" type="text" placeholder="Choose a Username" required/>
+        </div>
+         <div class="form-group">
+            <input id="signup-password-input" type="password" placeholder="Choose a Password" required/>
+        </div>
+         <div class="form-group">
+            <input id="signup-password-confirm-input" type="password" placeholder="Confirm Password" required/>
+        </div>
+        <button onclick="signupUser()">Sign Up</button>
+        <div id="signup-message" class="auth-message"></div>
+        <p>Already have an account? <button class="link-button" onclick="showLogin()">Log In</button></p>
     </div>
+
+    <!-- Main Content (Post-Login) -->
+    <div id="main-content" class="container">
+        <div id="welcome-message">
+             <span><!-- Welcome text added by JS --></span>
+             <button id="logout-button" onclick="logoutUser()">Logout</button>
+        </div>
+        <!-- Room joining section -->
+        <h3>Join or Create a Room</h3>
+        <div class="form-group chat-input-area"> <!-- Re-use chat input style -->
+            <input id="room-name-input" type="text" placeholder="Enter new room name" />
+            <button onclick="joinOrCreateRoom()">Join / Create</button>
+        </div>
+        <hr>
+        <!-- Active rooms section -->
+        <h3>Active Rooms</h3>
+        <ul id="active-rooms-list">
+            <li>Loading active rooms...</li>
+        </ul>
+         <button onclick="refreshRooms()" class="secondary">Refresh List</button> <!-- Secondary style button -->
+    </div>
+
+       <!-- Chat Container -->
+    <div id="chat-container" class="container">
+        <div id="chat-header">
+           <h2>Chat Room: <span id="room-name"></span></h2>
+           <button id="leave-room-button" onclick="leaveRoom()">Leave Room</button>
+       </div>
+       <!-- ADDED BACK the chat-box div -->
+       <div id="chat-box">
+           <!-- Messages will appear here -->
+       </div>
+       <!-- Moved chat-input-area to be AFTER chat-box -->
+       <div class="chat-input-area">
+           <input id="message-input" type="text" placeholder="Type a message..." onkeydown="handleKeydown(event)" />
+           <button onclick="sendMessage()">Send</button>
+       </div>
+    </div> <!-- This is the correct closing tag for chat-container -->
+
 
     <script>
-        let roomName, username, socket;
 
-        function enterRoom() {
-            roomName = document.getElementById("room-name-input").value.trim();
-            if (!roomName) {
-                alert("Please enter a room name!");
-                return;
+        let currentRoomName = null;
+        let username = null;
+        let socket = null;
+        let activeRoomsInterval = null;
+
+        const loginSection = document.getElementById('login-section');
+        const signupSection = document.getElementById('signup-section');
+        const mainContentSection = document.getElementById('main-content');
+        const chatContainerSection = document.getElementById('chat-container');
+
+        const loginUsernameInput = document.getElementById('login-username-input');
+        const loginPasswordInput = document.getElementById('login-password-input');
+        const loginErrorDiv = document.getElementById('login-error');
+
+        const signupUsernameInput = document.getElementById('signup-username-input');
+        const signupPasswordInput = document.getElementById('signup-password-input');
+        const signupPasswordConfirmInput = document.getElementById('signup-password-confirm-input');
+        const signupMessageDiv = document.getElementById('signup-message');
+
+        const welcomeMessage = document.getElementById('welcome-message').querySelector('span'); // Target the span inside
+        const roomNameInput = document.getElementById('room-name-input');
+        const activeRoomsList = document.getElementById('active-rooms-list');
+        const chatBox = document.getElementById("chat-box");
+        const messageInput = document.getElementById("message-input");
+        const roomNameSpan = document.getElementById("room-name");
+        const userCountSpan = document.getElementById('user-count-value');
+
+        function getCsrfToken() {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta) return meta.getAttribute('content');
+            const input = document.querySelector('input[name="csrfmiddlewaretoken"]');
+            if (input) return input.value;
+            console.error("CSRF token not found.");
+            return null;
+        }
+
+        function showLogin() {
+            signupMessageDiv.textContent = '';
+            signupUsernameInput.value = '';
+            signupPasswordInput.value = '';
+            signupPasswordConfirmInput.value = '';
+            username = null;
+            if (socket && socket.readyState === WebSocket.OPEN) { socket.close(); }
+            stopPollingActiveRooms();
+            loginSection.style.display = 'block';
+            signupSection.style.display = 'none';
+            mainContentSection.style.display = 'none';
+            chatContainerSection.style.display = 'none';
+            loginUsernameInput.value = '';
+            loginPasswordInput.value = '';
+            loginErrorDiv.textContent = '';
+        }
+
+        function showSignup() {
+            loginErrorDiv.textContent = '';
+            loginUsernameInput.value = '';
+            loginPasswordInput.value = '';
+            loginSection.style.display = 'none';
+            signupSection.style.display = 'block';
+            mainContentSection.style.display = 'none';
+            chatContainerSection.style.display = 'none';
+            signupMessageDiv.textContent = '';
+            signupUsernameInput.value = '';
+            signupPasswordInput.value = '';
+            signupPasswordConfirmInput.value = '';
+        }
+
+        function showMainContent() {
+            loginSection.style.display = 'none';
+            signupSection.style.display = 'none';
+            mainContentSection.style.display = 'block';
+            chatContainerSection.style.display = 'none';
+            welcomeMessage.textContent = `Welcome, ${username}!`; // Set text content of the span
+            fetchActiveRooms();
+            startPollingActiveRooms();
+        }
+
+        async function signupUser() {
+            const enteredUsername = signupUsernameInput.value.trim();
+            const enteredPassword = signupPasswordInput.value.trim();
+            const enteredPasswordConfirm = signupPasswordConfirmInput.value.trim();
+            signupMessageDiv.textContent = '';
+            signupMessageDiv.className = 'auth-message';
+
+            if (!enteredUsername || !enteredPassword || !enteredPasswordConfirm) {
+                signupMessageDiv.textContent = "Please fill in all fields.";
+                signupMessageDiv.classList.add('error'); return;
+            }
+            if (enteredPassword !== enteredPasswordConfirm) {
+                signupMessageDiv.textContent = "Passwords do not match.";
+                signupMessageDiv.classList.add('error'); return;
             }
 
-            username = prompt("Enter your name:");
-            if (!username) {
-                alert("Please enter a username!");
-                return;
-            }
-
-            document.getElementById("room-selection").style.display = "none";
-            document.getElementById("chat-container").style.display = "block";
-            document.getElementById("room-name").textContent = roomName;
-
-            // Connect WebSocket
-            socket = new WebSocket(`ws://${window.location.host}/ws/chat/${roomName}/`);
-
-            socket.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-                const chatBox = document.getElementById("chat-box");
-
-                const messageDiv = document.createElement("div");
-                messageDiv.classList.add("message");
-
-                if (data.username === username) {
-                    messageDiv.classList.add("own-message");
-                } else {
-                    messageDiv.classList.add("other-message");
+            try {
+                const csrfToken = getCsrfToken();
+                if (!csrfToken) {
+                     signupMessageDiv.textContent = "CSRF Token missing.";
+                     signupMessageDiv.classList.add('error'); return;
                 }
+                const response = await fetch('/api/signup/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                    body: JSON.stringify({ username: enteredUsername, password: enteredPassword })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    signupMessageDiv.textContent = data.message || "Signup successful! Please log in.";
+                    signupMessageDiv.classList.add('success');
+                    signupUsernameInput.value = ''; signupPasswordInput.value = ''; signupPasswordConfirmInput.value = '';
+                } else {
+                    signupMessageDiv.textContent = data.error || `Signup failed (Status: ${response.status})`;
+                    signupMessageDiv.classList.add('error');
+                }
+            } catch (error) {
+                console.error("Signup request failed:", error);
+                signupMessageDiv.textContent = "An error occurred during signup.";
+                signupMessageDiv.classList.add('error');
+            }
+        }
 
-                const timestamp = new Date().toLocaleTimeString();
+        async function loginUser() {
+            const enteredUsername = loginUsernameInput.value.trim();
+            const enteredPassword = loginPasswordInput.value.trim();
+            loginErrorDiv.textContent = '';
 
-                messageDiv.innerHTML = `<b>${roomName} | ${data.username}:</b> ${data.message} 
-                                        <span class="timestamp">${timestamp}</span>`;
+            if (!enteredUsername || !enteredPassword) {
+                loginErrorDiv.textContent = "Please enter both username and password."; return;
+            }
+            try {
+                const csrfToken = getCsrfToken();
+                if (!csrfToken) { loginErrorDiv.textContent = "CSRF Token missing."; return; }
+                const response = await fetch('/api/login/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                    body: JSON.stringify({ username: enteredUsername, password: enteredPassword })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    username = data.username;
+                    showMainContent();
+                } else {
+                    loginErrorDiv.textContent = data.error || "Login failed.";
+                    loginPasswordInput.value = '';
+                }
+            } catch (error) {
+                console.error("Login request failed:", error);
+                loginErrorDiv.textContent = "An error occurred during login.";
+            }
+        }
 
-                chatBox.appendChild(messageDiv);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            };
+        async function logoutUser() {
+             console.log("Logging out...");
+             try {
+                 const csrfToken = getCsrfToken();
+                 if (!csrfToken) { alert("CSRF Token missing."); return; }
+                 const response = await fetch('/api/logout/', {
+                     method: 'POST', headers: { 'X-CSRFToken': csrfToken }
+                 });
+                 if (response.ok) { showLogin(); }
+                 else { const data = await response.json(); alert(`Logout failed: ${data.error || 'Unknown error'}`); }
+             } catch (error) {
+                 console.error("Logout request failed:", error); alert("An error occurred during logout.");
+             }
+        }
+
+        async function fetchActiveRooms() {
+             console.log("Fetching active rooms...");
+            try {
+                const response = await fetch(`/api/rooms/`);
+                if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+                const rooms = await response.json();
+                activeRoomsList.innerHTML = '';
+                if (rooms.length === 0) {
+                    activeRoomsList.innerHTML = '<li>No active rooms currently. Create one!</li>';
+                } else {
+                    rooms.forEach(room => {
+                        const li = document.createElement('li');
+                        li.onclick = () => joinRoom(room.name);
+                        const roomNameText = document.createElement('span'); roomNameText.textContent = room.name;
+                        li.appendChild(roomNameText);
+                        activeRoomsList.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching active rooms:", error);
+                activeRoomsList.innerHTML = '<li>Error loading rooms. Please try refreshing.</li>';
+            }
+        }
+
+        function refreshRooms() {
+             activeRoomsList.innerHTML = '<li>Refreshing...</li>'; fetchActiveRooms();
+        }
+
+        function startPollingActiveRooms() {
+            stopPollingActiveRooms(); activeRoomsInterval = setInterval(fetchActiveRooms, 10000);
+        }
+
+        function stopPollingActiveRooms() {
+            if (activeRoomsInterval) { clearInterval(activeRoomsInterval); activeRoomsInterval = null; }
+        }
+
+        function joinOrCreateRoom() {
+            const roomToJoin = roomNameInput.value.trim();
+            if (!roomToJoin) { alert("Please enter a room name!"); return; }
+            joinRoom(roomToJoin); roomNameInput.value = '';
+        }
+
+        function joinRoom(roomToJoin) {
+            if (!username) { alert("Error: Not logged in."); showLogin(); return; }
+            if (socket && socket.readyState === WebSocket.OPEN) { console.warn("Leaving previous room first."); leaveRoom(false); }
+            currentRoomName = roomToJoin;
+            console.log(`Attempting to join room: ${currentRoomName} as ${username}`);
+            mainContentSection.style.display = 'none';
+            chatContainerSection.style.display = 'block';
+            roomNameSpan.textContent = currentRoomName;
+            chatBox.innerHTML = ''; messageInput.value = '';
+            stopPollingActiveRooms();
+            socket = new WebSocket(`ws://${window.location.host}/ws/chat/${currentRoomName}/`);
+            socket.onopen = function(event) { console.log('WebSocket connection opened for room:', currentRoomName); };
+            socket.onmessage = function(event) { handleWebSocketMessage(event.data); };
+            socket.onerror = function(error) { console.error('WebSocket Error:', error); displaySystemMessage(`Error connecting to room ${currentRoomName}. Please try leaving and rejoining.`); };
+            socket.onclose = function(event) {
+                console.log('WebSocket connection closed.', event.reason, event.code);
+                if (!event.wasClean || event.code === 1008 || event.code === 1011) {
+                     console.error('Chat socket closed unexpectedly or due to policy violation.');
+                     displaySystemMessage("Connection lost or closed by server. Please leave and rejoin.");
+                }
+           };
+        }
+
+        function leaveRoom(updateUI = true) {
+            console.log("Leaving room:", currentRoomName);
+            if (socket && socket.readyState === WebSocket.OPEN) { socket.close(1000, "User left room"); }
+            socket = null; currentRoomName = null;
+            if (updateUI) {
+                chatContainerSection.style.display = 'none'; mainContentSection.style.display = 'block';
+                fetchActiveRooms(); startPollingActiveRooms();
+            }
+        }
+
+        function handleWebSocketMessage(jsonData) {
+             try {
+                const data = JSON.parse(jsonData);
+                console.log("Message received: ", data);
+                if (data.type === 'chat_message' && data.message && data.username) { displayMessage(data.username, data.message); }
+                else if (data.type === 'user_join' && data.username) {
+                    displaySystemMessage(`${data.username} joined the room.`);
+                } else if (data.type === 'user_leave' && data.username) {
+                    displaySystemMessage(`${data.username} left the room.`);
+                }
+             } catch (error) { console.error("Error parsing WebSocket message:", error, "Data:", jsonData); }
+        }
+
+        function displayMessage(msgUsername, messageText) {
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message");
+            const senderSpan = document.createElement("div");
+            senderSpan.classList.add("message-sender");
+            if (msgUsername === username) { messageDiv.classList.add("own-message"); }
+            else { messageDiv.classList.add("other-message"); senderSpan.textContent = msgUsername; messageDiv.appendChild(senderSpan); }
+            const messageContent = document.createElement("span"); messageContent.textContent = messageText;
+            const timestampSpan = document.createElement("span"); timestampSpan.classList.add("timestamp");
+            timestampSpan.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            messageDiv.appendChild(messageContent); messageDiv.appendChild(timestampSpan);
+            chatBox.appendChild(messageDiv); chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Updated displaySystemMessage to use the new class
+        function displaySystemMessage(messageText) {
+            const messageDiv = document.createElement("div");
+            // Use the dedicated CSS class now
+            messageDiv.classList.add("system-message");
+            messageDiv.textContent = messageText;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
         function sendMessage() {
-            const messageInput = document.getElementById("message-input");
-            if (messageInput.value.trim() !== "") {
-                socket.send(JSON.stringify({ room_name: roomName, username, message: messageInput.value }));
-                messageInput.value = "";
+            const messageText = messageInput.value.trim();
+            if (messageText !== "" && socket && socket.readyState === WebSocket.OPEN) {
+                const messagePayload = { type: 'chat_message', message: messageText };
+                socket.send(JSON.stringify(messagePayload)); messageInput.value = "";
+            } else if (!socket || socket.readyState !== WebSocket.OPEN) {
+                console.error("Cannot send message: WebSocket is not open.");
+                displaySystemMessage("Cannot send message: Connection is closed.");
             }
         }
+
+        function handleKeydown(event) { if (event.key === "Enter") { sendMessage(); } }
+
+        showLogin(); // Start with the login screen displayed
+
     </script>
 
 </body>
